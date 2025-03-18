@@ -1,33 +1,35 @@
-import logging
+import asyncio
 import wikipedia
+from aiogram import Bot, Dispatcher
+from aiogram.filters import Command
+from aiogram.types import Message
 
-from aiogram import Bot, Dispatcher, executor, types
+wikipedia.set_lang("uz")
+TOKEN = "6699105976:AAFPvHPn0AF-OvYy1dP-rrBpdWKpFMxmEJw"
 
-API_TOKEN = ''
-wikipedia.set_lang('uz')
+dp = Dispatcher()
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 
-# Initialize bot and dispatcher
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
+@dp.message(Command("start"))
+async def command_start_handler(message: Message) -> None:
+    await message.answer("IT Creative. Xush kelibsiz!")
 
-@dp.message_handler(commands=['start', 'help'])
-async def send_welcome(message: types.Message):
-    """
-    This handler will be called when user sends `/start` or `/help` command
-    """
-    await message.reply("Wikipeida Botiga Xush Kelibsiz!")
 
-@dp.message_handler()
-async def sendWiki(message: types.Message):
+@dp.message()
+async def sendWiki(message: Message):
     try:
         respond = wikipedia.summary(message.text)
         await message.answer(respond)
-    except:
-        await message.answer("Bu mavzuga oid maqola topilmadi")
+    except wikipedia.exceptions.PageError:
+        await message.answer("Bu mavzuga oid maqola topilmadi.")
+    except wikipedia.exceptions.DisambiguationError:
+        await message.answer("Bu mavzu juda umumiy, iltimos, aniqroq so‘rov yuboring.")
 
 
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+async def main() -> None:
+    async with Bot(token=TOKEN) as bot:
+        await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
